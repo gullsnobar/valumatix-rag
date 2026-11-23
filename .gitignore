@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+node_modules/
+frontend/dist/
+evals/results/*.tmp
+.DS_Store
