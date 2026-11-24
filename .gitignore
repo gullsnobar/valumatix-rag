@@ -8,3 +8,5 @@ node_modules/
 frontend/dist/
 evals/results/*.tmp
 .DS_Store
+private_corpus/
+scratch/

@@ -1,0 +1,22 @@
+TARNWICK EMPLOYEE FAQ
+Last updated: March 2025
+
+Q: What are the office hours?
+A: The Lahore office is open Monday to Friday, 9:30 AM to 6:00 PM.
+
+Q: How many annual leave days do I get?
+A: Full-time employees get 18 days of annual leave per year.
+
+Q: Who do I contact for HR questions?
+A: Email hr@tarnwick.example or message the #ask-hr channel on Slack.
+
+Q: My laptop is broken. What should I do?
+A: Raise a ticket in the IT Help Desk on Jira. Replacement laptops are issued within 3 working days.
+
+Q: Which public holidays does Tarnwick follow?
+A: Tarnwick follows the federal public holiday list announced by the Government of Pakistan.
+
+Q: Is there a referral bonus?
+A: Yes. You receive PKR 50,000 when a person you referred completes probation.
+
+Fictional document created for the RAG portfolio project. Tarnwick Consulting is an invented company.
