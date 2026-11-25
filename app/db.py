@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    CheckConstraint,
     Computed,
     DateTime,
     ForeignKey,
@@ -49,6 +50,22 @@ class Base(DeclarativeBase):
     """Provide shared SQLAlchemy model metadata."""
 
 
+class User(Base):
+    """Store a user's normalized email and bcrypt credential."""
+
+    __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("email = lower(email)", name="ck_users_email_lowercase"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    email: Mapped[str] = mapped_column(String(254), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Document(Base):
     """Store file metadata and ownership for an ingested document."""
 
@@ -62,6 +79,7 @@ class Document(Base):
         String(64), default=PUBLIC_OWNER_ID, server_default=PUBLIC_OWNER_ID
     )
     filename: Mapped[str] = mapped_column(String(255))
+    doc_header: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_type: Mapped[str] = mapped_column(String(10))
     sha256: Mapped[str] = mapped_column(String(64))
     size_bytes: Mapped[int]
@@ -150,6 +168,9 @@ async def init_db() -> None:
             await connection.execute(sql_text("CREATE EXTENSION IF NOT EXISTS vector"))
             # Alembic migrations are outside this project's scope. Create tables at startup.
             await connection.run_sync(Base.metadata.create_all)
+            await connection.execute(
+                sql_text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS doc_header TEXT")
+            )
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:

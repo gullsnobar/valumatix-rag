@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     embed_dimensions: int = 1024
     embedding_batch_size: int = Field(default=16, gt=0)
     fallback_llm_model: str = "qwen2.5:3b"
+    llm_fallback_enabled: bool = True
 
     llm_provider: str = "groq"
     groq_base_url: str = "https://api.groq.com/openai/v1"
@@ -38,6 +39,8 @@ class Settings(BaseSettings):
     guard_model: str = "meta-llama/llama-prompt-guard-2-86m"
     llm_max_tokens: int = 400
     jwt_secret: SecretStr
+    jwt_algorithm: Literal["HS256"] = "HS256"
+    jwt_expire_minutes: int = Field(default=720, gt=0)
 
     chunk_strategy: Literal["fixed", "structure"] = "structure"
     chunk_size_words: int = 120
@@ -52,6 +55,7 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.1
     rate_limit_ask: str = "20/minute"
     rate_limit_upload: str = "30/minute"
+    rate_limit_login: str = "10/minute"
     # Groq free tier. Set actual prices for paid tiers.
     cost_per_million_input_tokens: float = Field(default=0.0, ge=0)
     cost_per_million_output_tokens: float = Field(default=0.0, ge=0)

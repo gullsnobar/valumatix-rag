@@ -135,6 +135,33 @@ async def test_reject_scanned_document(
     _assert_error(response, 400, "no_extractable_text")
 
 
+async def test_sample_documents_can_be_loaded_again(
+    document_api: tuple[httpx.AsyncClient, str], corpus_dir: Path,
+) -> None:
+    """Import every readable sample once and report the unreadable scan."""
+
+    client, _ = document_api
+    scan = "scanned_office_notice.pdf"
+    readable = {path.name for path in corpus_dir.iterdir()
+                if path.is_file() and not path.name.startswith(".")} - {scan}
+
+    for added, duplicates in ((len(readable), 0), (0, len(readable))):
+        response = await client.post("/documents/samples")
+        assert response.status_code == 200, response.text
+        result = response.json()
+        assert result["added"] == added
+        assert result["skipped_duplicates"] == duplicates
+        assert len(result["rejected"]) == 1
+        rejection, = result["rejected"]
+        assert rejection["filename"] == scan
+        assert rejection["code"] == "no_extractable_text"
+        assert rejection["message"]
+
+    documents = (await client.get("/documents")).json()
+    assert documents["total"] == len(readable)
+    assert {entry["filename"] for entry in documents["documents"]} == readable
+
+
 async def test_list_documents(
     document_api: tuple[httpx.AsyncClient, str], corpus_dir: Path
 ) -> None:

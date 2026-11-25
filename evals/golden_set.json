@@ -1,1 +1,724 @@
-[]
+[
+  {
+    "id": "q01",
+    "question": "How many annual leave days do employees get?",
+    "type": "contradiction",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "leave_policy_v2_2026.pdf",
+        "evidence": [
+          "21 working days"
+        ]
+      }
+    ],
+    "reference_answer": "21 working days per year under Leave Policy v2.0 (effective 1 July 2026). The older v1.0 policy and the FAQ say 18 days, but v2.0 supersedes them.",
+    "key_facts": [
+      "21 working days"
+    ]
+  },
+  {
+    "id": "q02",
+    "question": "How many unused annual leave days can be carried over to next year?",
+    "type": "contradiction",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "leave_policy_v2_2026.pdf",
+        "evidence": [
+          "up to 10 unused"
+        ]
+      }
+    ],
+    "reference_answer": "Up to 10 days under v2.0, to be used by 31 March of the following year (v1.0 allowed only 5).",
+    "key_facts": [
+      "10 days"
+    ]
+  },
+  {
+    "id": "q03",
+    "question": "What is the hotel limit per night in Karachi?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "15,000"
+        ]
+      }
+    ],
+    "reference_answer": "PKR 15,000 per night, with pre-approval.",
+    "key_facts": [
+      "PKR 15,000"
+    ]
+  },
+  {
+    "id": "q04",
+    "question": "If I'm sent to Islamabad, what is the most I can spend on a hotel each night?",
+    "type": "reworded",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "15,000"
+        ]
+      }
+    ],
+    "reference_answer": "PKR 15,000 per night (Karachi/Islamabad limit), with pre-approval.",
+    "key_facts": [
+      "PKR 15,000"
+    ]
+  },
+  {
+    "id": "q05",
+    "question": "Who approves expense claims above PKR 50,000?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "Finance Director"
+        ]
+      }
+    ],
+    "reference_answer": "The Finance Director. Line managers approve claims up to PKR 50,000.",
+    "key_facts": [
+      "Finance Director"
+    ]
+  },
+  {
+    "id": "q06",
+    "question": "When am I allowed to travel by air for work?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "400 km"
+        ]
+      }
+    ],
+    "reference_answer": "Economy class only, and only when the one-way distance is more than 400 km; otherwise train or car.",
+    "key_facts": [
+      "more than 400 km"
+    ]
+  },
+  {
+    "id": "q07",
+    "question": "How long do I have to submit an expense claim, and when do I need receipts?",
+    "type": "multi_part",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "30 days",
+          "1,000"
+        ]
+      }
+    ],
+    "reference_answer": "Within 30 days of the expense through ExpenseHub; receipts are required for every item above PKR 1,000.",
+    "key_facts": [
+      "30 days",
+      "receipts above PKR 1,000"
+    ]
+  },
+  {
+    "id": "q08",
+    "question": "Which days are mandatory office days?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "remote_work_policy.docx",
+        "evidence": [
+          "Tuesday"
+        ]
+      }
+    ],
+    "reference_answer": "Tuesday, Wednesday and Thursday.",
+    "key_facts": [
+      "Tuesday, Wednesday and Thursday"
+    ]
+  },
+  {
+    "id": "q09",
+    "question": "What are the core collaboration hours?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "remote_work_policy.docx",
+        "evidence": [
+          "11:00"
+        ]
+      }
+    ],
+    "reference_answer": "11:00 to 16:00 Pakistan Standard Time.",
+    "key_facts": [
+      "11:00 to 16:00"
+    ]
+  },
+  {
+    "id": "q10",
+    "question": "How long can I work from outside Pakistan?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "remote_work_policy.docx",
+        "evidence": [
+          "30 days per calendar year"
+        ]
+      }
+    ],
+    "reference_answer": "Up to 30 days per calendar year, with written HR approval.",
+    "key_facts": [
+      "30 days per calendar year"
+    ]
+  },
+  {
+    "id": "q11",
+    "question": "How much does the RevOps Audit cost and how long does it take?",
+    "type": "multi_part",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "service_catalogue_pricing.pdf",
+        "evidence": [
+          "2,500"
+        ]
+      }
+    ],
+    "reference_answer": "USD 2,500 fixed price, typically 3 weeks.",
+    "key_facts": [
+      "USD 2,500",
+      "3 weeks"
+    ]
+  },
+  {
+    "id": "q12",
+    "question": "What does the Pro support retainer include: fee, hours and response time?",
+    "type": "multi_part",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "service_catalogue_pricing.pdf",
+        "evidence": [
+          "1,800"
+        ]
+      }
+    ],
+    "reference_answer": "USD 1,800 per month, 50 hours included, first response within 4 business hours.",
+    "key_facts": [
+      "USD 1,800 per month",
+      "50 hours",
+      "4 business hours"
+    ]
+  },
+  {
+    "id": "q13",
+    "question": "What are the payment terms for projects?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "service_catalogue_pricing.pdf",
+        "evidence": [
+          "50% upfront"
+        ]
+      }
+    ],
+    "reference_answer": "50% upfront and 50% on delivery; invoices are due within 15 days.",
+    "key_facts": [
+      "50% upfront and 50% on delivery"
+    ]
+  },
+  {
+    "id": "q14",
+    "question": "How long is the probation period?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "onboarding_guide.docx",
+        "evidence": [
+          "3 months"
+        ]
+      }
+    ],
+    "reference_answer": "3 months, with reviews at the end of month 1 and month 3.",
+    "key_facts": [
+      "3 months"
+    ]
+  },
+  {
+    "id": "q15",
+    "question": "When is salary paid?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "onboarding_guide.docx",
+        "evidence": [
+          "last working day"
+        ]
+      }
+    ],
+    "reference_answer": "On the last working day of each month, by bank transfer.",
+    "key_facts": [
+      "last working day of each month"
+    ]
+  },
+  {
+    "id": "q16",
+    "question": "What is the minimum password length?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "security_it_policy.md",
+        "evidence": [
+          "14 characters"
+        ]
+      }
+    ],
+    "reference_answer": "At least 14 characters.",
+    "key_facts": [
+      "14 characters"
+    ]
+  },
+  {
+    "id": "q17",
+    "question": "Who do I report a security incident to, and how quickly?",
+    "type": "multi_part",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "security_it_policy.md",
+        "evidence": [
+          "1 hour"
+        ]
+      }
+    ],
+    "reference_answer": "Email security@tarnwick.example within 1 hour of noticing it.",
+    "key_facts": [
+      "security@tarnwick.example",
+      "within 1 hour"
+    ]
+  },
+  {
+    "id": "q18",
+    "question": "What is the maximum value of a gift I can accept from a client?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "code_of_conduct.docx",
+        "evidence": [
+          "5,000"
+        ]
+      }
+    ],
+    "reference_answer": "Up to PKR 5,000; anything above must be declared to HR and is normally returned.",
+    "key_facts": [
+      "PKR 5,000"
+    ]
+  },
+  {
+    "id": "q19",
+    "question": "How far in advance must flights be requested?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "travel_policy.md",
+        "evidence": [
+          "14 days"
+        ]
+      }
+    ],
+    "reference_answer": "At least 14 days before departure, through TravelDesk; later requests need line manager approval.",
+    "key_facts": [
+      "14 days before departure"
+    ]
+  },
+  {
+    "id": "q20",
+    "question": "What daily allowance do I get on an international trip?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "travel_policy.md",
+        "evidence": [
+          "USD 60"
+        ]
+      }
+    ],
+    "reference_answer": "USD 60 per day instead of meal claims.",
+    "key_facts": [
+      "USD 60 per day"
+    ]
+  },
+  {
+    "id": "q21",
+    "question": "What does a performance rating of 3 mean?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "performance_review_policy.md",
+        "evidence": [
+          "Solid"
+        ]
+      }
+    ],
+    "reference_answer": "Solid - meets expectations.",
+    "key_facts": [
+      "Solid / meets expectations"
+    ]
+  },
+  {
+    "id": "q22",
+    "question": "What is the yearly learning budget per employee?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "learning_and_development_policy.md",
+        "evidence": [
+          "150,000"
+        ]
+      }
+    ],
+    "reference_answer": "PKR 150,000 per calendar year for confirmed full-time employees; unused budget does not roll over.",
+    "key_facts": [
+      "PKR 150,000 per year"
+    ]
+  },
+  {
+    "id": "q23",
+    "question": "How quickly does IT respond to a P2 ticket?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "it_helpdesk_guide.md",
+        "evidence": [
+          "2 hours"
+        ]
+      }
+    ],
+    "reference_answer": "Within 2 hours (P2 - High: you cannot work at all).",
+    "key_facts": [
+      "2 hours"
+    ]
+  },
+  {
+    "id": "q24",
+    "question": "Do we get a day off on 23 March?",
+    "type": "reworded",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "public_holidays_2026.md",
+        "evidence": [
+          "23 March"
+        ]
+      }
+    ],
+    "reference_answer": "Yes. 23 March is Pakistan Day, a fixed-date public holiday.",
+    "key_facts": [
+      "yes, Pakistan Day is a holiday"
+    ]
+  },
+  {
+    "id": "q25",
+    "question": "How many days does a client have to accept a delivery after UAT?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "client_project_delivery_process.md",
+        "evidence": [
+          "5 working days"
+        ]
+      }
+    ],
+    "reference_answer": "5 working days; if no response arrives, the delivery is treated as accepted.",
+    "key_facts": [
+      "5 working days"
+    ]
+  },
+  {
+    "id": "q26",
+    "question": "What is the outpatient (OPD) insurance limit?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "health_and_wellbeing_benefits.md",
+        "evidence": [
+          "60,000"
+        ]
+      }
+    ],
+    "reference_answer": "PKR 60,000 per family per year.",
+    "key_facts": [
+      "PKR 60,000"
+    ]
+  },
+  {
+    "id": "q27",
+    "question": "What notice period do I need to give if I resign?",
+    "type": "single",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "resignation_and_offboarding_policy.md",
+        "evidence": [
+          "30 days"
+        ]
+      }
+    ],
+    "reference_answer": "30 days of written notice for confirmed employees; 7 days during probation.",
+    "key_facts": [
+      "30 days"
+    ]
+  },
+  {
+    "id": "q28",
+    "question": "Is unused annual leave paid out in cash when I resign?",
+    "type": "multi_doc",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "leave_policy_v2_2026.pdf",
+        "evidence": [
+          "not paid out"
+        ]
+      },
+      {
+        "file": "resignation_and_offboarding_policy.md",
+        "evidence": [
+          "not paid out"
+        ]
+      }
+    ],
+    "reference_answer": "No. Unused annual leave is not paid out in cash (Leave Policy v2.0 and the Resignation and Offboarding Policy).",
+    "key_facts": [
+      "no, it is not paid out in cash"
+    ]
+  },
+  {
+    "id": "q29",
+    "question": "What can I claim for working from home?",
+    "type": "multi_doc",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "remote_work_policy.docx",
+        "evidence": [
+          "stipend"
+        ]
+      },
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "3,000"
+        ]
+      }
+    ],
+    "reference_answer": "A one-time home-office stipend of PKR 15,000 (Remote Work Policy) and home internet up to PKR 3,000 per month (Expense Policy).",
+    "key_facts": [
+      "PKR 15,000 one-time stipend",
+      "home internet up to PKR 3,000 per month"
+    ]
+  },
+  {
+    "id": "q30",
+    "question": "My laptop broke. How fast will it be replaced?",
+    "type": "multi_doc",
+    "language": "en",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "it_helpdesk_guide.md",
+        "evidence": [
+          "3 working days"
+        ]
+      },
+      {
+        "file": "employee_faq.txt",
+        "evidence": [
+          "3 working days"
+        ]
+      }
+    ],
+    "reference_answer": "Within 3 working days; raise a ticket in the IT Help Desk on Jira.",
+    "key_facts": [
+      "3 working days"
+    ]
+  },
+  {
+    "id": "u01",
+    "question": "What is the name of Tarnwick's CEO?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u02",
+    "question": "What is the company parking policy?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u03",
+    "question": "What is the capital of France?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Off-topic; not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u04",
+    "question": "What was Tarnwick's annual revenue last year?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u05",
+    "question": "Does Tarnwick offer stock options to employees?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u06",
+    "question": "What is the office dress code?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Not in the documents.",
+    "key_facts": []
+  },
+  {
+    "id": "u07",
+    "question": "Where is the office moving on 1 December 2026?",
+    "type": "unanswerable",
+    "language": "en",
+    "answerable": false,
+    "expected_sources": [],
+    "reference_answer": "Only stated in the scanned PDF, which has no extractable text and is rejected at upload, so it is not in the indexed documents.",
+    "key_facts": []
+  },
+  {
+    "id": "m01",
+    "question": "ملازمین کو سالانہ کتنی چھٹیاں ملتی ہیں؟",
+    "type": "multilingual",
+    "language": "ur",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "leave_policy_v2_2026.pdf",
+        "evidence": [
+          "21 working days"
+        ]
+      }
+    ],
+    "reference_answer": "21 working days per year (Leave Policy v2.0).",
+    "key_facts": [
+      "21 working days"
+    ]
+  },
+  {
+    "id": "m02",
+    "question": "کراچی میں ہوٹل کی ایک رات کی حد کتنی ہے؟",
+    "type": "multilingual",
+    "language": "ur",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "expense_policy.pdf",
+        "evidence": [
+          "15,000"
+        ]
+      }
+    ],
+    "reference_answer": "PKR 15,000 per night, with pre-approval.",
+    "key_facts": [
+      "PKR 15,000"
+    ]
+  },
+  {
+    "id": "m03",
+    "question": "پاس ورڈ کم از کم کتنے حروف کا ہونا چاہیے؟",
+    "type": "multilingual",
+    "language": "ur",
+    "answerable": true,
+    "expected_sources": [
+      {
+        "file": "security_it_policy.md",
+        "evidence": [
+          "14 characters"
+        ]
+      }
+    ],
+    "reference_answer": "At least 14 characters.",
+    "key_facts": [
+      "14 characters"
+    ]
+  }
+]

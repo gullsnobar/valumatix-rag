@@ -1,5 +1,8 @@
 """Define custom exceptions and consistent JSON error responses."""
 
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+from math import isfinite
 from uuid import UUID
 
 
@@ -70,3 +73,70 @@ class ExternalServiceError(RagServiceError):
 
     status_code = 503
     error_code = "service_unavailable"
+
+
+class UnauthorizedError(RagServiceError):
+    """Reject a request without a valid bearer token."""
+
+    status_code = 401
+    error_code = "unauthorized"
+
+    def __init__(self) -> None:
+        """Provide a generic message for every bearer-token failure."""
+
+        super().__init__("A valid bearer token is required.")
+
+
+class InvalidCredentialsError(RagServiceError):
+    """Reject an unsuccessful login without revealing whether the email exists."""
+
+    status_code = 401
+    error_code = "invalid_credentials"
+
+    def __init__(self) -> None:
+        """Use the same response for unknown emails and incorrect passwords."""
+
+        super().__init__("Invalid email or password.")
+
+
+class EmailTakenError(RagServiceError):
+    """Report a duplicate signup email."""
+
+    status_code = 409
+    error_code = "email_taken"
+
+    def __init__(self) -> None:
+        """Report that the supplied email is already registered."""
+
+        super().__init__("This email is already registered.")
+
+
+class RateLimitedError(RagServiceError):
+    """Report a provider rate limit along with its requested wait time."""
+
+    status_code = 429
+    error_code = "rate_limited"
+
+    def __init__(self, retry_after_seconds: float) -> None:
+        """Keep the retry delay available to callers."""
+
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__("Language model rate limit reached.")
+
+    @classmethod
+    def from_retry_after(cls, header: str | None) -> "RateLimitedError":
+        """Parse a Retry-After value as seconds or an HTTP date, defaulting to ten."""
+
+        if header is not None:
+            try:
+                seconds = float(header)
+                if isfinite(seconds) and seconds >= 0:
+                    return cls(seconds)
+            except ValueError:
+                try:
+                    when = parsedate_to_datetime(header)
+                    if when.tzinfo is not None:
+                        return cls(max(0.0, (when - datetime.now(UTC)).total_seconds()))
+                except (ValueError, OverflowError):
+                    pass
+        return cls(10.0)

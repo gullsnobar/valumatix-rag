@@ -1,10 +1,11 @@
 """Define Pydantic request and response models for the service API."""
 
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, field_validator
 
 from app.config import get_settings
 
@@ -23,6 +24,65 @@ _ERROR_EXAMPLE = {
     "request_id": "518c9510-a3cf-4493-9260-92637bf6ff89",
 }
 ServiceStatus = Literal["ok", "unavailable"]
+_EMAIL_ATOM = r"[a-z0-9!#$%&'*+/=?^_\x60{|}~-]+"
+_DOMAIN_LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+_EMAIL_ADDRESS = re.compile(rf"{_EMAIL_ATOM}(?:\.{_EMAIL_ATOM})*@(?:{_DOMAIN_LABEL}\.)+{_DOMAIN_LABEL}")
+
+
+class SignupRequest(BaseModel):
+    """Accept a normalized email and a password suitable for bcrypt."""
+
+    email: str = Field(max_length=254, json_schema_extra={"format": "email"})
+    password: SecretStr = Field(min_length=8)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        """Trim and lowercase a string email before validation."""
+
+        return value.strip().lower() if isinstance(value, str) else value
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, email: str) -> str:
+        """Reject malformed email addresses without an additional package."""
+
+        if not _EMAIL_ADDRESS.fullmatch(email) or len(email.partition("@")[0]) > 64:
+            raise ValueError("Enter a valid email address.")
+        return email
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, password: SecretStr) -> SecretStr:
+        """Prevent silent truncation at bcrypt's UTF-8 byte limit."""
+
+        if len(password.get_secret_value().encode("utf-8")) > 72:
+            raise ValueError("Password must be at most 72 UTF-8 bytes.")
+        return password
+
+
+class LoginRequest(BaseModel):
+    """Accept credentials for a login attempt."""
+
+    email: str
+    password: SecretStr
+
+
+class UserOut(BaseModel):
+    """Expose an account's identity without credential material."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    email: str
+
+
+class AuthResponse(BaseModel):
+    """Return a bearer token and the corresponding account."""
+
+    access_token: str = Field(repr=False)
+    token_type: Literal["bearer"] = "bearer"
+    user: UserOut
 
 
 class DocumentOut(BaseModel):
@@ -50,6 +110,22 @@ class DocumentListOut(BaseModel):
 
     documents: list[DocumentOut] = Field(description="Documents ordered newest first.")
     total: int = Field(description="Total number of documents in the list.")
+
+
+class RejectedSampleOut(BaseModel):
+    """Describe why a sample document could not be added."""
+
+    filename: str
+    code: str
+    message: str
+
+
+class SampleDocumentsOut(BaseModel):
+    """Summarize sample ingestion for the current owner."""
+
+    added: int = Field(ge=0)
+    skipped_duplicates: int = Field(ge=0)
+    rejected: list[RejectedSampleOut]
 
 
 class ErrorBody(BaseModel):
@@ -206,3 +282,15 @@ class MetricsOut(BaseModel):
     estimated_cost_usd: float
     provider_counts: dict[str, int]
     window: str
+
+
+class RecentMetricOut(BaseModel):
+    """Expose one telemetry record without including internal identifiers."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    created_at: datetime
+    latency_ms: float
+    provider: str | None
+    refused: bool
+    refusal_reason: str | None

@@ -8,10 +8,42 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import PUBLIC_OWNER_ID, get_settings
-from app.db import AskLog, DOCUMENT_HASH_CONSTRAINT, Document, DocumentChunk, database_errors
-from app.errors import DocumentNotFoundError, DuplicateDocumentError, ExternalServiceError
+from app.db import AskLog, DOCUMENT_HASH_CONSTRAINT, Document, DocumentChunk, User, database_errors
+from app.errors import DocumentNotFoundError, DuplicateDocumentError, EmailTakenError, ExternalServiceError
 from app.ingestion.chunking import Chunk
 from app.schemas import MetricsOut
+
+
+async def create_user(session: AsyncSession, email: str, password_hash: str) -> User:
+    """Insert a user and report concurrent or existing signup conflicts."""
+
+    statement = (
+        insert(User)
+        .values(email=email.lower(), password_hash=password_hash)
+        .on_conflict_do_nothing(index_elements=[User.email])
+        .returning(User)
+    )
+    with database_errors():
+        async with session.begin():
+            user = await session.scalar(statement)
+            if user is None:
+                raise EmailTakenError()
+    return user
+
+
+async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
+    """Look up a normalized login email."""
+
+    with database_errors():
+        async with session.begin():
+            return await session.scalar(select(User).where(User.email == email.lower()))
+
+
+async def get_user(session: AsyncSession, user_id: UUID) -> User | None:
+    """Find the account identified by an authenticated subject."""
+
+    with database_errors():
+        return await session.get(User, user_id)
 
 
 async def get_document_by_hash(
@@ -36,6 +68,7 @@ async def create_document_with_chunks(
     warnings: list[str],
     chunks: list[Chunk],
     embeddings: list[list[float]],
+    doc_header: str | None = None,
 ) -> Document:
     """Commit a document and its chunks atomically, detecting concurrent duplicates."""
 
@@ -46,6 +79,7 @@ async def create_document_with_chunks(
                 .values(
                     owner_id=owner_id,
                     filename=filename,
+                    doc_header=doc_header,
                     file_type=file_type,
                     sha256=sha256,
                     size_bytes=size_bytes,
@@ -142,6 +176,19 @@ async def insert_ask_log(session: AsyncSession, entry: AskLog) -> None:
     with database_errors():
         async with session.begin():
             session.add(entry)
+
+
+async def list_recent_metrics(session: AsyncSession, owner_id: str, limit: int) -> list[AskLog]:
+    """Return a bounded page of the caller's telemetry, newest first."""
+
+    statement = (
+        select(AskLog)
+        .where(AskLog.owner_id == owner_id)
+        .order_by(AskLog.created_at.desc(), AskLog.id.desc())
+        .limit(limit)
+    )
+    with database_errors():
+        return list(await session.scalars(statement))
 
 
 async def compute_metrics(session: AsyncSession, owner_id: str) -> MetricsOut:

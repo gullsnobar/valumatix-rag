@@ -13,7 +13,7 @@ from starlette.requests import Request
 from tenacity import AsyncRetrying, retry_if_exception, stop_after_attempt, wait_exponential
 
 from app.config import Settings
-from app.errors import ExternalServiceError
+from app.errors import ExternalServiceError, RateLimitedError
 
 logger = logging.getLogger(__name__)
 _CHAT_FAILURES = (
@@ -204,6 +204,8 @@ class ChatClient:
                 return 0.0
             probability = float(value)
             return probability if 0.0 <= probability <= 1.0 else None
+        except RateLimitedError:
+            raise
         except Exception:
             return None
 
@@ -213,10 +215,10 @@ class ChatClient:
         await self._client.aclose()
 
     def _providers(self) -> tuple[tuple[str, str], ...]:
-        return (
-            ("groq", self._settings.llm_model),
-            ("ollama", self._settings.fallback_llm_model),
-        )
+        primary = ("groq", self._settings.llm_model)
+        if self._settings.llm_fallback_enabled:
+            return (primary, ("ollama", self._settings.fallback_llm_model))
+        return (primary,)
 
     @staticmethod
     def _payload(
@@ -257,6 +259,11 @@ class ChatClient:
             if response.is_success:
                 return response
             try:
+                if (
+                    provider == "groq" and response.status_code == 429
+                    and not self._settings.llm_fallback_enabled
+                ):
+                    raise RateLimitedError.from_retry_after(response.headers.get("Retry-After"))
                 if (
                     attempt == 0 and provider == "groq" and response.status_code == 400
                     and "reasoning_effort" in payload
