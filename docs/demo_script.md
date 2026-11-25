@@ -136,7 +136,7 @@ $env:LLM_FALLBACK_ENABLED = 'true'
 
 ## 10:45–12:25 · Evaluation
 
-**Show.** Run retrieval-only evaluation in the activated environment with PostgreSQL and Ollama running. Preserve the full-run summary because retrieval-only replaces `latest_summary.json`. After the terminal prints the ranking table, open `EVAL.md` at **Configuration Comparison**, **Iteration: Before and After**, **Failure Analysis**, and **Judge Reliability**. Show the blank `human_correctness` column in `evals/results/judge_review.csv`.
+**Show.** Run retrieval-only evaluation in the activated environment with PostgreSQL and Ollama running. Preserve the full-run summary because retrieval-only replaces `latest_summary.json`. After the terminal prints the ranking table, open `EVAL.md` at **Configuration Comparison**, **Iteration: Before and After**, **Failure Analysis**, and **Judge Reliability**. Show the completed `human_correctness` column in `evals/results/judge_review.csv`.
 
 ```powershell
 $fullSummary = 'evals/results/latest_summary.json'
@@ -150,9 +150,17 @@ try {
 }
 ```
 
-**Say.** “The live run compares fixed and structure chunking with dense and hybrid retrieval, without the generation or judge calls. In the saved full run, correctness rose from 19/33 on the re-judged baseline to 29/33 and false refusals fell from 13 to 1. The failure table records four remaining cases, and judge agreement is pending human labels.”
+**Say.** “I built a golden set of 40 questions with source files and evidence text for answerable items. There are 30 answerable English questions, three answerable Urdu questions, and seven questions the documents can’t answer. The questions cover rewording, several facts in one answer, multiple documents, and conflicting versions.
 
-**Evidence.** Live configuration table and winner, the saved before/after scores, `q01`, `q24`, `q29`, and `m01` failures, and the **PENDING HUMAN LABELS** notice.
+“I compared fixed and structure-aware chunking with both dense and hybrid search. Fixed chunking with hybrid search won with an MRR of 0.90. Thirty of the 33 answerable questions had a relevant passage in the top four.
+
+“The original baseline scored 54.5% correctness with 13 false refusals. Rescoring those same baseline answers with the key-facts rule gave 57.6%. After updates to citation parsing and the version-handling prompt, the new run scored 87.9% on that rule with one false refusal. It correctly refused all seven unanswerable questions, with zero hallucinations on those questions.
+
+“A Qwen model scored correctness, from a different model family than the answer generator. I independently labelled 12 answers without seeing the judge’s verdicts. Agreement was 75% and Cohen’s kappa was 0.40. The three disagreements concerned which details were required, so I treat the absolute correctness score as an estimate.
+
+“One remaining failure is choosing the old 18-day leave policy when the current policy provides 21 days. That happened in both the English contradiction case and the Urdu leave question. The failure analysis describes where the current evidence ranked and what to try next.”
+
+**Evidence.** Live configuration table and winner, the original and re-judged baseline scores, the four remaining failures, and the completed judge agreement results.
 
 ## 12:25–13:00 · Tests
 
