@@ -36,6 +36,16 @@ INJECTION_PATTERNS = [
     ),
 ]
 _CITATION = re.compile(r"\[(C[0-9]+)\]")
+_CITATION_ID = re.compile(r"\bC[0-9]+\b", re.IGNORECASE)
+_CITATION_LIST = r"[ \t]*C[0-9]+(?:[ \t]*[,;][ \t]*C[0-9]+)*[ \t]*"
+_INLINE_CITATIONS = re.compile(
+    rf"\[\[(?P<double>[^\[\]\r\n]+)\]\]"
+    rf"|\[(?P<square>[^\[\]\r\n]+)\]"
+    rf"|\((?P<paren>{_CITATION_LIST})\)"
+    rf"|\u3010(?P<corner>{_CITATION_LIST})(?:\u2020[^\u3011\r\n]*)?\u3011",
+    re.IGNORECASE,
+)
+_SOURCE_LINE = re.compile(rf"Sources:[ \t]*(?P<ids>{_CITATION_LIST})", re.IGNORECASE)
 _API_KEY = re.compile(
     r"\b(?:gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|Bearer\s+[A-Za-z0-9._~+/=-]{16,})",
     re.I,
@@ -85,17 +95,36 @@ def check_answer(answer: str) -> GuardResult:
 def extract_citations(answer: str) -> list[str]:
     """List distinct citation IDs in order of first appearance."""
 
-    return list(dict.fromkeys(_CITATION.findall(answer)))
+    return list(dict.fromkeys(_CITATION.findall(_normalize_citations(answer))))
+
+
+def _normalize_citations(answer: str) -> str:
+    lines = answer.rstrip().splitlines(keepends=True)
+    source_groups: list[str] = []
+    while lines and (source_line := _SOURCE_LINE.fullmatch(lines[-1].strip())):
+        source_groups.append(source_line["ids"])
+        lines.pop()
+
+    def mark(ids: str) -> str:
+        return "".join(f"[{citation.upper()}]" for citation in _CITATION_ID.findall(ids))
+
+    def replace(match: re.Match[str]) -> str:
+        return mark(match[match.lastgroup or 0]) or match[0]
+
+    body = _INLINE_CITATIONS.sub(replace, "".join(lines)).rstrip()
+    sources = mark(" ".join(reversed(source_groups)))
+    return "\n".join(part for part in (body, sources) if part)
 
 
 def validate_citations(
     answer: str, retrieved: list[RetrievedChunk]
 ) -> tuple[str, list[str], list[str]]:
-    """Remove markers for unavailable sources and return valid and invalid IDs."""
+    """Normalize citation markers, drop unavailable IDs, and report both ID sets."""
 
     available = {chunk.citation_id for chunk in retrieved}
-    cited = extract_citations(answer)
+    normalized = _normalize_citations(answer)
+    cited = list(dict.fromkeys(_CITATION.findall(normalized)))
     valid = [citation for citation in cited if citation in available]
     invalid = [citation for citation in cited if citation not in available]
-    clean_answer = _CITATION.sub(lambda m: m[0] if m[1] in available else "", answer)
+    clean_answer = _CITATION.sub(lambda m: m[0] if m[1] in available else "", normalized)
     return clean_answer.strip(), valid, invalid

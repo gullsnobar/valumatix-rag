@@ -1,5 +1,8 @@
 """Define custom exceptions and consistent JSON error responses."""
 
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+from math import isfinite
 from uuid import UUID
 
 
@@ -70,3 +73,34 @@ class ExternalServiceError(RagServiceError):
 
     status_code = 503
     error_code = "service_unavailable"
+
+
+class RateLimitedError(RagServiceError):
+    """Report a provider rate limit along with its requested wait time."""
+
+    status_code = 429
+    error_code = "rate_limited"
+
+    def __init__(self, retry_after_seconds: float) -> None:
+        """Keep the retry delay available to callers."""
+
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__("Language model rate limit reached.")
+
+    @classmethod
+    def from_retry_after(cls, header: str | None) -> "RateLimitedError":
+        """Parse a Retry-After value as seconds or an HTTP date, defaulting to ten."""
+
+        if header is not None:
+            try:
+                seconds = float(header)
+                if isfinite(seconds) and seconds >= 0:
+                    return cls(seconds)
+            except ValueError:
+                try:
+                    when = parsedate_to_datetime(header)
+                    if when.tzinfo is not None:
+                        return cls(max(0.0, (when - datetime.now(UTC)).total_seconds()))
+                except (ValueError, OverflowError):
+                    pass
+        return cls(10.0)

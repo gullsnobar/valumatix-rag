@@ -62,6 +62,7 @@ class Document(Base):
         String(64), default=PUBLIC_OWNER_ID, server_default=PUBLIC_OWNER_ID
     )
     filename: Mapped[str] = mapped_column(String(255))
+    doc_header: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_type: Mapped[str] = mapped_column(String(10))
     sha256: Mapped[str] = mapped_column(String(64))
     size_bytes: Mapped[int]
@@ -150,6 +151,9 @@ async def init_db() -> None:
             await connection.execute(sql_text("CREATE EXTENSION IF NOT EXISTS vector"))
             # Alembic migrations are outside this project's scope. Create tables at startup.
             await connection.run_sync(Base.metadata.create_all)
+            await connection.execute(
+                sql_text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS doc_header TEXT")
+            )
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:

@@ -36,6 +36,7 @@ async def create_document_with_chunks(
     warnings: list[str],
     chunks: list[Chunk],
     embeddings: list[list[float]],
+    doc_header: str | None = None,
 ) -> Document:
     """Commit a document and its chunks atomically, detecting concurrent duplicates."""
 
@@ -46,6 +47,7 @@ async def create_document_with_chunks(
                 .values(
                     owner_id=owner_id,
                     filename=filename,
+                    doc_header=doc_header,
                     file_type=file_type,
                     sha256=sha256,
                     size_bytes=size_bytes,

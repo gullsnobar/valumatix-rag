@@ -28,6 +28,7 @@ class RetrievedChunk:
     keyword_rank: int | None = None
     rrf_score: float = 0.0
     citation_id: str = ""
+    doc_header: str | None = None
 
 
 def _owned_chunks(owner_id: str) -> Select:
@@ -36,6 +37,7 @@ def _owned_chunks(owner_id: str) -> Select:
             DocumentChunk.id.label("chunk_id"),
             DocumentChunk.document_id,
             Document.filename,
+            Document.doc_header,
             DocumentChunk.page,
             DocumentChunk.section,
             DocumentChunk.position,

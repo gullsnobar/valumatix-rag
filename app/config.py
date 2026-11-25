@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     embed_dimensions: int = 1024
     embedding_batch_size: int = Field(default=16, gt=0)
     fallback_llm_model: str = "qwen2.5:3b"
+    llm_fallback_enabled: bool = True
 
     llm_provider: str = "groq"
     groq_base_url: str = "https://api.groq.com/openai/v1"
