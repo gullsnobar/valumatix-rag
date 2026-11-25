@@ -1,15 +1,17 @@
 """Provide database access functions for documents and chunks."""
 
+from datetime import timedelta
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import PUBLIC_OWNER_ID
-from app.db import DOCUMENT_HASH_CONSTRAINT, Document, DocumentChunk, database_errors
+from app.config import PUBLIC_OWNER_ID, get_settings
+from app.db import AskLog, DOCUMENT_HASH_CONSTRAINT, Document, DocumentChunk, database_errors
 from app.errors import DocumentNotFoundError, DuplicateDocumentError, ExternalServiceError
 from app.ingestion.chunking import Chunk
+from app.schemas import MetricsOut
 
 
 async def get_document_by_hash(
@@ -132,3 +134,59 @@ async def count_chunks(
             )
         )
     return total or 0
+
+
+async def insert_ask_log(session: AsyncSession, entry: AskLog) -> None:
+    """Persist one request's timing, usage, and outcome metadata."""
+
+    with database_errors():
+        async with session.begin():
+            session.add(entry)
+
+
+async def compute_metrics(session: AsyncSession, owner_id: str) -> MetricsOut:
+    """Aggregate request counts, token usage, and latency for the last seven days."""
+
+    filters = (
+        AskLog.owner_id == owner_id,
+        AskLog.created_at >= func.now() - timedelta(days=7),
+    )
+    statement = select(
+        func.count(AskLog.id).label("total"),
+        func.count(AskLog.id).filter(AskLog.error).label("errors"),
+        func.count(AskLog.id).filter(AskLog.refused).label("refusals"),
+        func.percentile_cont(0.50).within_group(AskLog.latency_ms).label("p50"),
+        func.percentile_cont(0.95).within_group(AskLog.latency_ms).label("p95"),
+        func.avg(AskLog.latency_ms).label("average"),
+        func.sum(AskLog.prompt_tokens).label("prompt"),
+        func.sum(AskLog.completion_tokens).label("completion"),
+    ).where(*filters)
+    providers = (
+        select(AskLog.provider, func.count(AskLog.id))
+        .where(*filters, AskLog.provider.is_not(None)).group_by(AskLog.provider)
+    )
+    with database_errors():
+        summary = (await session.execute(statement)).mappings().one()
+        provider_counts = {provider: count for provider, count in await session.execute(providers)}
+
+    settings = get_settings()
+    total = summary["total"]
+    prompt_tokens = summary["prompt"] or 0
+    completion_tokens = summary["completion"] or 0
+    cost = (
+        prompt_tokens * settings.cost_per_million_input_tokens
+        + completion_tokens * settings.cost_per_million_output_tokens
+    ) / 1_000_000
+    return MetricsOut(
+        total_requests=total,
+        error_rate=summary["errors"] / total if total else 0.0,
+        refusal_rate=summary["refusals"] / total if total else 0.0,
+        p50_latency_ms=round(summary["p50"] or 0.0, 2),
+        p95_latency_ms=round(summary["p95"] or 0.0, 2),
+        avg_latency_ms=round(summary["average"] or 0.0, 2),
+        total_prompt_tokens=prompt_tokens,
+        total_completion_tokens=completion_tokens,
+        estimated_cost_usd=cost,
+        provider_counts=provider_counts,
+        window="last_7_days",
+    )
