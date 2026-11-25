@@ -213,7 +213,33 @@ Use `--no-cache` for a fresh answer and judge run. Retrieval-only mode skips gen
 
 ## Screenshots
 
-The [screenshots folder](docs/screenshots/) currently contains no images. Expected captures are `login.png`, `signup.png`, `ask-citations.png`, `documents.png`, `insights.png`, `swagger-upload.png`, and `swagger-ask.png`.
+The Swagger and web app walkthrough uses the files below from [docs/screenshots/](docs/screenshots/). Mask bearer tokens and authorization headers in captures for the public repository.
+
+<details>
+<summary>Swagger API</summary>
+
+![Swagger endpoint overview](docs/screenshots/01_swagger_overview.png)
+![Swagger Authorize dialog with the token masked](docs/screenshots/02_swagger_authorize.png)
+![Successful document upload with HTTP 201](docs/screenshots/03_upload_201.png)
+![Duplicate document upload with HTTP 409](docs/screenshots/04_duplicate_409.png)
+![Unsupported file upload with HTTP 415](docs/screenshots/05_unsupported_415.png)
+![Scanned PDF rejection with HTTP 400](docs/screenshots/06_scanned_400.png)
+![Cited answer to the Karachi hotel limit question](docs/screenshots/07_ask_200.png)
+![Refusal for the capital of France question](docs/screenshots/08_ask_refused.png)
+
+</details>
+
+<details>
+<summary>PolicyDesk RAG web app</summary>
+
+![PolicyDesk RAG sign-in page](docs/screenshots/10_login.png)
+![Answer with the cited source drawer open](docs/screenshots/11_answer_with_sources.png)
+![Question refused for lack of supporting evidence](docs/screenshots/12_refusal.png)
+![Documents page showing the hidden-text warning](docs/screenshots/13_documents.png)
+![Insights dashboard with request metrics](docs/screenshots/14_insights.png)
+![How it works guide](docs/screenshots/15_guide.png)
+
+</details>
 
 ## Project structure
 
