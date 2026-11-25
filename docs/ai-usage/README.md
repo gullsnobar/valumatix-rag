@@ -15,6 +15,10 @@ The observed Codex session used a workspace-write sandbox with write access to t
 
 The author planned the project with Claude and implemented it through Codex. The author reviewed the changes, ran each step locally, and fixed issues found during testing and evaluation. The design and evaluation documents tie decisions and reported results to repository evidence.
 
+The login-page illustration (frontend/src/assets/policy-handbook.jpg) was generated with ImageGen through Codex.
+
+The 12 human labels for the judge reliability check were entered by the author, not by an AI tool.
+
 ## Prompt log
 
 The [prompt log](prompts.md) exists and currently contains a heading and introductory sentence. It has no logged prompts for setup, corpus audit, corpus swap, extraction, chunking, chunk tuning, ingestion API, ask engine, evaluation, evaluation fixes, auth, frontend, redesign, or documentation.

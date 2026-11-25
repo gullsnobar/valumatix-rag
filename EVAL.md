@@ -67,9 +67,19 @@ Request telemetry comes from the service’s own `ask_logs`. The evaluation read
 
 # Judge Reliability
 
-The judge is from the Qwen family and the answer model is from the gpt-oss family. The [review worksheet](evals/results/judge_review.csv) samples 12 answered items, mixing judge scores of 1 and 0 where available. This export contains 9 scores of 1 and 3 scores of 0. A human assigns an independent binary correctness label to each answer against its question and reference. `judge_check --score` reports exact agreement and Cohen’s kappa, which adjusts for agreement expected from the label frequencies.
+The author independently labelled 12 answered items as correct (1) or incorrect (0) while blinded to the judge’s verdicts. The `key_facts` rule requires every listed fact, matching numbers, and consistency with the reference answer. The review sample contains nine judge-positive items and three judge-negative items. [Review worksheet](evals/results/judge_review.csv)
 
-**PENDING HUMAN LABELS** for agreement rate and Cohen’s kappa.
+The author and the Qwen judge agreed on 9 of 12 items, for **75.0% agreement** and **Cohen’s kappa of 0.40**. Kappa adjusts for the agreement expected from the two sets of label frequencies. [Agreement results](evals/results/judge_agreement.json)
+
+| ID | Question | Judge score | Human score | Judge’s reason | What differed |
+|---|---|---:|---:|---|---|
+| q03 | What is the hotel limit per night in Karachi? | 1 | 0 | PKR 15,000 matches the sole key fact. Pre-approval is outside the checklist. | The answer gave the correct limit and omitted the reference’s pre-approval requirement. |
+| q06 | When am I allowed to travel by air for work? | 1 | 0 | The one-way threshold of more than 400 km satisfies the checklist. Economy class is outside the checklist. | The answer gave the distance threshold and travel alternatives and omitted the reference’s economy-only restriction. |
+| q29 | What can I claim for working from home? | 0 | 1 | The answer omitted the required PKR 15,000 one-time stipend. | The author accepted the answer that gave the internet allowance alone. The judge required both benefits. |
+
+A kappa of 0.40 indicates fair-to-moderate agreement. With only 12 items and mostly positive labels from both reviewers (eight from the author and nine from the judge), a few label changes can shift kappa substantially. The judge is useful for comparing configurations under a shared rubric, and its absolute correctness figure should be treated as an estimate.
+
+Next steps are to label a larger, more balanced sample, test a stricter judge prompt for multi-fact answers, or add a second judge model and use a third verdict to resolve split votes by majority.
 
 # Configuration Comparison
 
@@ -107,7 +117,9 @@ Full per-item artifacts are available for [retrieval](evals/results/retrieval_20
 | English | 37 | 29/30 | 27/30 (90.0%) | 29/29 (100.0%) | 7/7 | 0 | 1 |
 | Urdu | 3 | 3/3 | 2/3 (66.7%) | 3/3 (100.0%) | N/A | 0 | 0 |
 
-Correctness includes the 1 false refusal. Faithfulness covers the 32 returned answers. On the seven unanswerable items, refusal accuracy was 100% and hallucination rate was 0%.
+Correctness includes the 1 false refusal. Treat the 87.9% correctness figure as a judge-based estimate given the limits of the human agreement check. [Judge Reliability](#judge-reliability)
+
+Faithfulness covers the 32 returned answers. On the seven unanswerable items, refusal accuracy was 100% and hallucination rate was 0%.
 
 Across 40 requests, latency was **1,001.08 ms p50** and **1,849.71 ms p95**. English was 1,013.46 ms p50 and 2,351.05 ms p95. Urdu was 945.76 ms p50 and 1,038.46 ms p95. The full sample includes two unusually slow requests, `u02` (127,965.90 ms) and `u03` (5,024.84 ms).
 
