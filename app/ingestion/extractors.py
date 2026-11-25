@@ -129,12 +129,12 @@ def _extract_pdf(
                     page_chunks=True,
                 )
                 page_text = chunks[0]["text"] if chunks else ""
-            except Exception:
+            except Exception as exc:
                 LOGGER.warning(
-                    "Markdown PDF extraction failed for %s page %d; using plain text.",
+                    "Markdown PDF extraction failed for %r page %d (%s). Using plain text.",
                     filename,
                     page_index + 1,
-                    exc_info=True,
+                    type(exc).__name__,
                 )
                 page_text = page.get_text("text")
 

@@ -70,8 +70,9 @@ def chunk_structure(
 
     Merge chunks under 40 words into the previous chunk on the same page
     if the result fits within max_words, otherwise try the next chunk on
-    that page with the same limit. Keep the chunk if neither neighbor fits.
-    Renumber the resulting chunks in document order.
+    that page with the same limit. PowerPoint chunks may also merge forward
+    into the next slide, keeping the first page and combining slide titles.
+    Keep the chunk if neither neighbor fits and renumber in document order.
 
     A table row that exceeds the maximum with its header stays intact.
     """
@@ -106,7 +107,7 @@ def chunk_structure(
                 _make_chunk(doc.filename, "\n\n".join(parts), len(chunks), page, heading)
             )
 
-    return _merge_short_chunks(doc.filename, chunks, max_words)
+    return _merge_short_chunks(doc, chunks, max_words)
 
 
 def chunk_document(doc: ExtractedDocument, settings: Settings) -> list[Chunk]:
@@ -126,7 +127,7 @@ def _make_chunk(
 
 
 def _merge_short_chunks(
-    filename: str, chunks: list[Chunk], max_words: int
+    doc: ExtractedDocument, chunks: list[Chunk], max_words: int
 ) -> list[Chunk]:
     pending = deque(chunks)
     merged: list[Chunk] = []
@@ -134,27 +135,37 @@ def _merge_short_chunks(
         chunk = pending.popleft()
         if chunk.word_count < _MIN_CHUNK_WORDS:
             if merged and _can_merge(merged[-1], chunk, max_words):
-                pending.appendleft(_join_chunks(filename, merged.pop(), chunk))
+                pending.appendleft(_join_chunks(doc.filename, merged.pop(), chunk))
                 continue
-            if pending and _can_merge(chunk, pending[0], max_words):
-                pending.appendleft(_join_chunks(filename, chunk, pending.popleft()))
+            if pending and _can_merge(
+                chunk, pending[0], max_words, across_pages=doc.file_type == "pptx"
+            ):
+                pending.appendleft(_join_chunks(doc.filename, chunk, pending.popleft()))
                 continue
         merged.append(chunk)
 
     return [replace(chunk, position=position) for position, chunk in enumerate(merged)]
 
 
-def _can_merge(first: Chunk, second: Chunk, max_words: int) -> bool:
-    return first.page == second.page and first.word_count + second.word_count <= max_words
+def _can_merge(
+    first: Chunk, second: Chunk, max_words: int, *, across_pages: bool = False
+) -> bool:
+    return (
+        (across_pages or first.page == second.page)
+        and first.word_count + second.word_count <= max_words
+    )
 
 
 def _join_chunks(filename: str, first: Chunk, second: Chunk) -> Chunk:
+    section = first.section
+    if first.page != second.page:
+        section = " / ".join(title for title in (first.section, second.section) if title) or None
     return _make_chunk(
         filename,
         f"{first.text}\n\n{second.text}",
         first.position,
         first.page,
-        first.section,
+        section,
     )
 
 

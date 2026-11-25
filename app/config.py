@@ -1,10 +1,12 @@
 """Centralize application settings. Deployment secrets come from the environment or .env."""
 
 from functools import lru_cache
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PUBLIC_OWNER_ID: Final = "public"
 
 
 class Settings(BaseSettings):
@@ -25,6 +27,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     embed_model: str = "bge-m3"
     embed_dimensions: int = 1024
+    embedding_batch_size: int = Field(default=16, gt=0)
     fallback_llm_model: str = "qwen2.5:3b"
 
     llm_provider: str = "groq"
@@ -44,6 +47,14 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     http_timeout_seconds: float = 30.0
     http_max_retries: int = 3
+    database_timeout_seconds: float = Field(default=30.0, gt=0)
+    cors_allowed_origin: str = "http://localhost:5173"
+
+    @property
+    def max_upload_bytes(self) -> int:
+        """Return the configured upload limit in bytes."""
+
+        return self.max_upload_mb * 1024 * 1024
 
 
 @lru_cache

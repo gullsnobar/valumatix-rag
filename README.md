@@ -14,7 +14,16 @@ To be completed.
 To be completed.
 
 # Running the Service
-To be completed.
+
+From the repository root, start PostgreSQL, activate the Python environment, and launch the API.
+
+```powershell
+docker compose up -d
+.\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --reload
+```
+
+Open [Swagger UI](http://127.0.0.1:8000/docs) to try the API. Ollama must be running with the configured embedding model for uploads.
 
 # Running Tests
 To be completed.
