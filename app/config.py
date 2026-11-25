@@ -44,6 +44,17 @@ class Settings(BaseSettings):
     chunk_overlap_words: int = 25
     chunk_max_words: int = 200
     top_k: int = 4
+    retrieval_mode: Literal["dense", "hybrid"] = "hybrid"
+    candidate_k: int = Field(default=20, gt=0)
+    rrf_k: int = Field(default=60, ge=0)
+    min_similarity: float = Field(default=0.45, ge=-1, le=1)
+    max_question_chars: int = Field(default=1000, gt=0)
+    llm_temperature: float = 0.1
+    rate_limit_ask: str = "20/minute"
+    rate_limit_upload: str = "30/minute"
+    # Groq free tier. Set actual prices for paid tiers.
+    cost_per_million_input_tokens: float = Field(default=0.0, ge=0)
+    cost_per_million_output_tokens: float = Field(default=0.0, ge=0)
     max_upload_mb: int = 10
     http_timeout_seconds: float = 30.0
     http_max_retries: int = 3

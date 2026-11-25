@@ -106,6 +106,31 @@ class DocumentChunk(Base):
     document: Mapped[Document] = relationship(back_populates="chunks")
 
 
+class AskLog(Base):
+    """Store question-answering telemetry without the question or answer text."""
+
+    __tablename__ = "ask_logs"
+    __table_args__ = (Index("ix_ask_logs_owner_created_at", "owner_id", "created_at"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[str] = mapped_column(String(64))
+    request_id: Mapped[str] = mapped_column(String(128))
+    question_chars: Mapped[int]
+    latency_ms: Mapped[float]
+    provider: Mapped[str | None] = mapped_column(String(32))
+    model: Mapped[str | None] = mapped_column(String(255))
+    refused: Mapped[bool]
+    refusal_reason: Mapped[str | None] = mapped_column(String(64))
+    error: Mapped[bool]
+    prompt_tokens: Mapped[int]
+    completion_tokens: Mapped[int]
+    retrieved_count: Mapped[int]
+    timings_ms: Mapped[dict[str, float]] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 @contextmanager
 def database_errors() -> Iterator[None]:
     """Translate database and connection failures without exposing SQL or values."""

@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy import delete
 
 from app.config import get_settings
-from app.db import Document, SessionFactory
+from app.db import AskLog, Document, SessionFactory
 from app.llm_client import get_embedding_client
 from app.main import app, get_owner_id
 from app.repository import count_chunks
@@ -48,12 +48,14 @@ async def document_api() -> AsyncIterator[tuple[httpx.AsyncClient, str]]:
         async with app.router.lifespan_context(app):
             try:
                 async with httpx.AsyncClient(
-                    transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+                    transport=httpx.ASGITransport(app=app, client=(owner_id, 1234)),
+                    base_url="http://testserver",
                 ) as client:
                     yield client, owner_id
             finally:
                 async with SessionFactory.begin() as session:
                     await session.execute(delete(Document).where(Document.owner_id == owner_id))
+                    await session.execute(delete(AskLog).where(AskLog.owner_id == owner_id))
     finally:
         app.dependency_overrides.pop(get_owner_id, None)
         app.dependency_overrides.pop(get_embedding_client, None)

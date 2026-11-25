@@ -1,0 +1,33 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	guard_input(guard_input)
+	check_corpus(check_corpus)
+	retrieve(retrieve)
+	check_relevance(check_relevance)
+	generate(generate)
+	validate_output(validate_output)
+	refuse(refuse)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> guard_input;
+	check_corpus -.-> refuse;
+	check_corpus -. &nbsp;continue&nbsp; .-> retrieve;
+	check_relevance -. &nbsp;continue&nbsp; .-> generate;
+	check_relevance -.-> refuse;
+	generate -.-> refuse;
+	generate -. &nbsp;continue&nbsp; .-> validate_output;
+	guard_input -. &nbsp;continue&nbsp; .-> check_corpus;
+	guard_input -.-> refuse;
+	retrieve -. &nbsp;continue&nbsp; .-> check_relevance;
+	retrieve -.-> refuse;
+	validate_output -. &nbsp;continue&nbsp; .-> __end__;
+	validate_output -.-> refuse;
+	refuse --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+
