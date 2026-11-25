@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    CheckConstraint,
     Computed,
     DateTime,
     ForeignKey,
@@ -47,6 +48,22 @@ SessionFactory = async_sessionmaker(engine, expire_on_commit=False)
 
 class Base(DeclarativeBase):
     """Provide shared SQLAlchemy model metadata."""
+
+
+class User(Base):
+    """Store a user's normalized email and bcrypt credential."""
+
+    __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("email = lower(email)", name="ck_users_email_lowercase"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    email: Mapped[str] = mapped_column(String(254), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 class Document(Base):

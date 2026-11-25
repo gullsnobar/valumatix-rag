@@ -8,7 +8,7 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, File, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -19,17 +19,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.asking import AskService
-from app.config import PUBLIC_OWNER_ID, Settings, get_settings
+from app.auth import current_user, get_owner_id, login_user, register_user
+from app.config import Settings, get_settings
 from app.db import engine, get_session, init_db
 from app.errors import RagServiceError
 from app.health import check_health
-from app.ingestion.pipeline import ingest_document
+from app.ingestion.pipeline import ingest_document, ingest_sample_documents
 from app.llm_client import ChatClient, EmbeddingClient, get_chat_client, get_embedding_client
 from app.logging_config import RequestIdMiddleware, configure_logging
-from app.repository import compute_metrics, delete_document, get_document, list_documents
+from app.repository import compute_metrics, delete_document, get_document, list_documents, list_recent_metrics
 from app.schemas import (
-    AskRequest, AskResponse, DocumentListOut, DocumentOut, ErrorBody, ErrorResponse,
-    HealthOut, MetricsOut,
+    AskRequest, AskResponse, AuthResponse, DocumentListOut, DocumentOut, ErrorBody, ErrorResponse,
+    HealthOut, LoginRequest, MetricsOut, RecentMetricOut, SampleDocumentsOut, SignupRequest, UserOut,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,9 +56,9 @@ async def lifespan(application: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Tarnwick RAG Service",
+    title="PolicyDesk RAG API",
     version="0.1.0",
-    description="Manage documents and get source-cited answers for Tarnwick Consulting.",
+    description="Question answering over company policy documents, with cited sources.",
     lifespan=lifespan,
 )
 limiter = Limiter(key_func=get_remote_address)
@@ -79,7 +80,10 @@ def _error_response(request: Request, status_code: int, code: str, message: str)
 async def service_error(request: Request, exc: RagServiceError) -> JSONResponse:
     """Convert a known service error to its documented HTTP response."""
 
-    return _error_response(request, exc.status_code, exc.error_code, str(exc))
+    response = _error_response(request, exc.status_code, exc.error_code, str(exc))
+    if exc.status_code == 401:
+        response.headers["WWW-Authenticate"] = "Bearer"
+    return response
 
 
 @app.exception_handler(RequestValidationError)
@@ -121,15 +125,9 @@ app.add_middleware(
     allow_origins=[get_settings().cors_allowed_origin],
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
+    expose_headers=["X-Request-ID", "WWW-Authenticate"],
 )
 app.add_middleware(RequestIdMiddleware, on_error=unexpected_error)
-
-
-async def get_owner_id() -> str:
-    """Provide the public owner until JWT authentication is added."""
-
-    return PUBLIC_OWNER_ID
 
 
 Owner = Annotated[str, Depends(get_owner_id)]
@@ -138,11 +136,13 @@ Embedder = Annotated[EmbeddingClient, Depends(get_embedding_client)]
 Chat = Annotated[ChatClient, Depends(get_chat_client)]
 ServiceSettings = Annotated[Settings, Depends(get_settings)]
 
-_DOCUMENT_RESPONSES = {
+_COMMON_RESPONSES = {
     422: {"model": ErrorResponse, "description": "Request validation failed."},
     503: {"model": ErrorResponse, "description": "A required dependency is unavailable."},
     500: {"model": ErrorResponse, "description": "An unexpected error occurred."},
 }
+_UNAUTHORIZED = {"model": ErrorResponse, "description": "A valid bearer token is required."}
+_DOCUMENT_RESPONSES = {**_COMMON_RESPONSES, 401: _UNAUTHORIZED}
 _NOT_FOUND = {"model": ErrorResponse, "description": "The document was not found."}
 _RATE_LIMIT = {"model": ErrorResponse, "description": "The request rate exceeded the limit."}
 _ASK_RESPONSES = {
@@ -179,6 +179,54 @@ Asking = Annotated[AskService, Depends(get_ask_service)]
 
 
 @app.post(
+    "/auth/signup",
+    tags=["auth"],
+    status_code=201,
+    summary="Create an account",
+    description="Register an email and password and receive a bearer token.",
+    responses={
+        **_COMMON_RESPONSES,
+        409: {"model": ErrorResponse, "description": "The email is already registered."},
+    },
+)
+async def signup(credentials: SignupRequest, session: Session) -> AuthResponse:
+    """Create an account and return its session credentials."""
+
+    return await register_user(session, credentials)
+
+
+@app.post(
+    "/auth/login",
+    tags=["auth"],
+    summary="Sign in",
+    description="Exchange an email and password for a bearer token.",
+    responses={
+        **_COMMON_RESPONSES,
+        401: {"model": ErrorResponse, "description": "The credentials were rejected."},
+        429: _RATE_LIMIT,
+    },
+)
+@limiter.limit(lambda: get_settings().rate_limit_login)
+async def login(request: Request, credentials: LoginRequest, session: Session) -> AuthResponse:
+    """Authenticate the supplied credentials."""
+
+    return await login_user(session, credentials)
+
+
+@app.get(
+    "/auth/me",
+    tags=["auth"],
+    summary="Get the current account",
+    description="Return the profile identified by the bearer token.",
+    responses=_DOCUMENT_RESPONSES,
+)
+async def me(session: Session, owner_id: Owner) -> UserOut:
+    """Return the authenticated user's profile."""
+
+    return await current_user(session, owner_id)
+
+
+@app.post(
     "/documents",
     tags=["documents"],
     status_code=201,
@@ -207,6 +255,25 @@ async def upload_document(
     data = await file.read(settings.max_upload_bytes + 1)
     document = await ingest_document(data, file.filename or "", owner_id, session, embedder, settings)
     return DocumentOut.model_validate(document)
+
+
+@app.post(
+    "/documents/samples",
+    tags=["documents"],
+    summary="Add sample documents",
+    description=(
+        "Ingest the bundled fictional Tarnwick Consulting corpus for the current account. "
+        "Files are processed sequentially. Existing duplicates are counted and skipped, "
+        "and each rejected file is returned with its reason."
+    ),
+    responses=_DOCUMENT_RESPONSES,
+)
+async def add_samples(
+    owner_id: Owner, session: Session, embedder: Embedder, settings: ServiceSettings,
+) -> SampleDocumentsOut:
+    """Load the sample corpus for the authenticated owner."""
+
+    return await ingest_sample_documents(owner_id, session, embedder, settings)
 
 
 @app.get(
@@ -324,3 +391,19 @@ async def metrics(session: Session, owner_id: Owner) -> MetricsOut:
     """Return aggregate question-answering telemetry."""
 
     return await compute_metrics(session, owner_id)
+
+
+@app.get(
+    "/metrics/recent",
+    tags=["system"],
+    summary="Get recent question metrics",
+    description="Return the current owner's latest question metrics, newest first.",
+    responses=_DOCUMENT_RESPONSES,
+)
+async def recent_metrics(
+    session: Session, owner_id: Owner, limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[RecentMetricOut]:
+    """Return a limited list of telemetry records for the authenticated owner."""
+
+    entries = await list_recent_metrics(session, owner_id, limit)
+    return [RecentMetricOut.model_validate(entry) for entry in entries]

@@ -75,6 +75,42 @@ class ExternalServiceError(RagServiceError):
     error_code = "service_unavailable"
 
 
+class UnauthorizedError(RagServiceError):
+    """Reject a request without a valid bearer token."""
+
+    status_code = 401
+    error_code = "unauthorized"
+
+    def __init__(self) -> None:
+        """Provide a generic message for every bearer-token failure."""
+
+        super().__init__("A valid bearer token is required.")
+
+
+class InvalidCredentialsError(RagServiceError):
+    """Reject an unsuccessful login without revealing whether the email exists."""
+
+    status_code = 401
+    error_code = "invalid_credentials"
+
+    def __init__(self) -> None:
+        """Use the same response for unknown emails and incorrect passwords."""
+
+        super().__init__("Invalid email or password.")
+
+
+class EmailTakenError(RagServiceError):
+    """Report a duplicate signup email."""
+
+    status_code = 409
+    error_code = "email_taken"
+
+    def __init__(self) -> None:
+        """Report that the supplied email is already registered."""
+
+        super().__init__("This email is already registered.")
+
+
 class RateLimitedError(RagServiceError):
     """Report a provider rate limit along with its requested wait time."""
 
