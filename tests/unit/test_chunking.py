@@ -82,34 +82,38 @@ def test_both_strategies_on_every_text_bearing_file(
                 assert any(row.startswith(("|---", "| ---")) for row in rows), path.name
 
 
-@pytest.mark.parametrize(
-    "check_overview",
-    [
-        pytest.param(False, id="other-corpus-files"),
-        pytest.param(
-            True,
-            id="company-overview",
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=AssertionError,
-                reason="Each overview slide has under 40 words and occupies its own page.",
-            ),
-        ),
-    ],
-)
 def test_structure_chunk_minimum_across_corpus(
-    corpus_dir: Path, chunk_settings: Settings, check_overview: bool
+    corpus_dir: Path, chunk_settings: Settings
 ) -> None:
     """Require forty words per structure chunk when a document has multiple chunks."""
 
     for path in _text_corpus_paths(corpus_dir):
-        if (path.name == "company_overview.pptx") != check_overview:
-            continue
         doc = extract_document(path.read_bytes(), path.name)
         chunks = chunk_document(doc, chunk_settings)
         if len(chunks) > 1:
             short = [(chunk.position, chunk.word_count) for chunk in chunks if chunk.word_count < 40]
             assert not short, f"{path.name}: short chunks (position, words): {short}"
+
+
+def test_structure_merges_short_slides_forward_with_their_titles() -> None:
+    """Keep the first slide's number and preserve both titles in a combined chunk."""
+
+    doc = ExtractedDocument(
+        "slides.pptx",
+        "pptx",
+        [
+            ExtractedSection(_words(20, "title"), 1, "Title"),
+            ExtractedSection(_words(30, "summary"), 2, "Summary"),
+            ExtractedSection(_words(50, "detail"), 3, "Detail"),
+        ],
+        [],
+    )
+    chunks = chunk_structure(doc, 120, 200)
+    assert [(chunk.page, chunk.section, chunk.word_count) for chunk in chunks] == [
+        (1, "Title / Summary", 50),
+        (3, "Detail", 50),
+    ]
+    assert "Section: Title / Summary\n\n" in chunks[0].embed_text
 
 
 def test_expense_policy_keeps_hotel_row_with_its_header(
