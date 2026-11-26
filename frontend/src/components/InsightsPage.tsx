@@ -116,28 +116,26 @@ export function InsightsPage() {
     ['Estimated cost', data && currency.format(data.estimated_cost_usd)],
   ]
   return (
-    <div className="page-scroll">
-      <div className="page-container standard-page">
-        <div className="insights-period muted">{data?.window === 'last_7_days' ? 'Last 7 days' : '\u00a0'}</div>
-        {metrics.isError && <InlineError message="Could not load metrics." retry={() => { void metrics.refetch() }} />}
-        <dl className="stats-grid" aria-busy={metrics.isPending}>
-          {stats.map(([label, value]) => <div className="stat" key={label}>
-            <dt className="muted">{label}</dt>
-            <dd className="mono">{metrics.isPending ? <span className="skeleton-bar" /> : value ?? '—'}</dd>
-          </div>)}
-        </dl>
-        <div className="insight-grid">
-          <section className="insight-panel">
-            <div className="section-heading"><h2>Recent latency</h2><span className="muted secondary-text">Last 50 requests</span></div>
-            {recent.isPending && <SkeletonRows rows={4} />}
-            {recent.isError && <InlineError message="Could not load recent latency." retry={() => { void recent.refetch() }} />}
-            {recent.isSuccess && <LatencyChart rows={recent.data} />}
-          </section>
-          <section className="insight-panel">
-            <div className="section-heading"><h2>Providers</h2></div>
-            {metrics.isPending ? <SkeletonRows rows={2} /> : <Providers counts={data?.provider_counts ?? {}} />}
-          </section>
-        </div>
+    <div className="page-container standard-page">
+      <div className="insights-period muted">{data?.window === 'last_7_days' ? 'Last 7 days' : '\u00a0'}</div>
+      {metrics.isError && <InlineError message="Could not load metrics." retry={() => { void metrics.refetch() }} />}
+      <dl className="stats-grid" aria-busy={metrics.isPending}>
+        {stats.map(([label, value]) => <div className="stat" key={label}>
+          <dt className="muted">{label}</dt>
+          <dd className="mono">{metrics.isPending ? <span className="skeleton-bar" /> : value ?? '—'}</dd>
+        </div>)}
+      </dl>
+      <div className="insight-grid">
+        <section className="insight-panel">
+          <div className="section-heading"><h2>Recent latency</h2><span className="muted secondary-text">Last 50 requests</span></div>
+          {recent.isPending && <SkeletonRows rows={4} />}
+          {recent.isError && <InlineError message="Could not load recent latency." retry={() => { void recent.refetch() }} />}
+          {recent.isSuccess && <LatencyChart rows={recent.data} />}
+        </section>
+        <section className="insight-panel">
+          <div className="section-heading"><h2>Providers</h2></div>
+          {metrics.isPending ? <SkeletonRows rows={2} /> : <Providers counts={data?.provider_counts ?? {}} />}
+        </section>
       </div>
     </div>
   )
