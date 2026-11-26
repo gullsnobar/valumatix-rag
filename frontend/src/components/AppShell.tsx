@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart3, CircleHelp, ExternalLink, FileText, Menu, MessageSquareText, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
+import { Link, matchPath, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { API_DOCS_URL, api } from '../api/client.ts'
 import type { HealthOut, UserOut } from '../api/types.ts'
 import { useAuth } from '../hooks/auth.ts'
@@ -19,6 +19,7 @@ import { HowItWorks } from './HowItWorks.tsx'
 import { Notice } from './Notice.tsx'
 import { ProfileMenu, SignOutDialog } from './ProfileMenu.tsx'
 import { SlideOver } from './SlideOver.tsx'
+import { ThemeControl } from './ThemeControl.tsx'
 
 const navigation = [
   { path: '/', label: 'Ask', description: 'Ask questions and check the source passages.', Icon: MessageSquareText },
@@ -52,7 +53,7 @@ export function AppShell({ user }: { user: UserOut }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { logout } = useAuth()
-  const page = navigation.find(({ path }) => path === location.pathname) ?? navigation[0]
+  const page = navigation.find(({ path }) => matchPath(path, location.pathname)) ?? navigation[0]
   const { theme, select } = useTheme()
   const uploads = useUploadQueue(user.id)
   const samples = useSampleDocuments(user.id, setNotice)
@@ -128,6 +129,7 @@ export function AppShell({ user }: { user: UserOut }) {
             <ExternalLink aria-hidden="true" /><span className="rail-label">API documentation</span>
           </a>
         </section>
+        <div className="rail-preferences"><ThemeControl theme={theme} selectTheme={select} /></div>
       </div>
       <div className="rail-health"><HealthIndicator health={health.data} failed={health.isError} /></div>
     </div>
@@ -144,7 +146,7 @@ export function AppShell({ user }: { user: UserOut }) {
         }} />
       {!mobile && <motion.aside className="nav-rail" aria-label="Workspace navigation" initial={false}
         animate={{ width: railCollapsed ? 72 : 240 }} transition={{ duration: reduced ? 0 : 0.2, ease: 'easeOut' }}>
-        <div className="nav-rail-fixed">{railContents(railCollapsed, true)}</div>
+        {railContents(railCollapsed, true)}
       </motion.aside>}
       <div className="workspace">
         <header className="top-bar">
@@ -156,12 +158,15 @@ export function AppShell({ user }: { user: UserOut }) {
             <div className="top-bar-actions">
               <button className="icon-button" type="button" aria-label="Help" title="How it works"
                 aria-haspopup="dialog" onClick={openGuide}><CircleHelp /></button>
-              <ProfileMenu email={user.email} theme={theme} selectTheme={select} open={profileOpen}
+              <ProfileMenu email={user.email} open={profileOpen}
                 setOpen={setProfileOpen} requestSignOut={(trigger) => setSignOut({ trigger })} />
             </div>
           </div>
         </header>
-        <main id="main-content" className="app-content" tabIndex={-1}><Outlet context={data} /></main>
+        <main key={page.path} id="main-content" tabIndex={-1}
+          className={'app-content ' + (page.path === '/' ? 'app-content-ask' : 'page-scroll')}>
+          <Outlet context={data} />
+        </main>
       </div>
       <SlideOver open={drawer === 'guide' || (mobile && drawer === 'navigation')}
         variant={drawer === 'guide' ? 'guide' : 'navigation'}

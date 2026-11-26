@@ -100,20 +100,20 @@ export function AskPage() {
             {addingSamples && <SampleProgress />}
             <UploadRows queue={uploads} />
           </div>
-          <div className="composer-dock">
-            <p className="composer-context muted secondary-text">
-              {count === 0 ? <>No documents yet · <button className="text-link" type="button" onClick={pickFiles}>Upload</button></>
-                : count === undefined ? documents.isError
-                  ? <>Documents unavailable · <Link className="text-link" to="/documents">Manage</Link></>
-                  : 'Checking your documents…'
-                  : <>Searching <span className="mono">{count}</span> {count === 1 ? 'document' : 'documents'}
-                    {' · '}<Link className="text-link" to="/documents">Manage</Link></>}
-            </p>
-            <Composer value={draft} change={setDraft} busy={busy}
-              onSend={() => send(draft)} onStop={conversation.stop} onAttach={pickFiles} />
-          </div>
         </div>
       </section>
+      <div className="page-container composer-dock">
+        <p className="composer-context muted secondary-text">
+          {count === 0 ? <>No documents yet · <button className="text-link" type="button" onClick={pickFiles}>Upload</button></>
+            : count === undefined ? documents.isError
+              ? <>Documents unavailable · <Link className="text-link" to="/documents">Manage</Link></>
+              : 'Checking your documents…'
+              : <>Searching <span className="mono">{count}</span> {count === 1 ? 'document' : 'documents'}
+                {' · '}<Link className="text-link" to="/documents">Manage</Link></>}
+        </p>
+        <Composer value={draft} change={setDraft} busy={busy}
+          onSend={() => send(draft)} onStop={conversation.stop} onAttach={pickFiles} />
+      </div>
       <SourcesDrawer selection={source} close={() => setSource(null)} />
     </>
   )

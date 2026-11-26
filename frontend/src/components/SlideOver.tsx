@@ -41,7 +41,8 @@ function DrawerPanel({
       if (event.key !== 'Tab') return
       const focusable = [...(panel.current?.querySelectorAll<HTMLElement>(
         'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]',
-      ) ?? [])].filter((element) => element.getClientRects().length > 0)
+      ) ?? [])].filter((element) => element.getClientRects().length > 0
+        && !element.matches('input[type="radio"]:not(:checked)'))
       const first = focusable[0]
       const last = focusable.at(-1)
       const active = document.activeElement

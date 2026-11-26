@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { LogOut } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
-import type { Theme } from '../hooks/theme.ts'
 import { Popover } from './Popover.tsx'
 
 function displayProfile(email: string) {
@@ -16,18 +15,10 @@ function displayProfile(email: string) {
   }
 }
 
-const themes: { value: Theme; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
-]
-
 export function ProfileMenu({
-  email, theme, selectTheme, open, setOpen, requestSignOut,
+  email, open, setOpen, requestSignOut,
 }: {
   email: string
-  theme: Theme
-  selectTheme: (theme: Theme) => void
   open: boolean
   setOpen: (open: boolean) => void
   requestSignOut: (trigger: HTMLButtonElement | null) => void
@@ -41,7 +32,7 @@ export function ProfileMenu({
       aria-controls={open ? id : undefined} onClick={() => setOpen(!open)}>
       <span className="avatar" aria-hidden="true">{profile.initials}</span>
     </button>
-    <AnimatePresence>{open && <Popover id={id} label="Profile settings" placement="below"
+    <AnimatePresence>{open && <Popover id={id} label="Account" placement="below"
       onClose={() => setOpen(false)} restoreFocusTo={trigger}>
       <div className="profile-card">
         <span className="avatar" aria-hidden="true">{profile.initials}</span>
@@ -49,17 +40,6 @@ export function ProfileMenu({
           <span>{profile.name}</span><span className="profile-email muted" title={email}>{email}</span>
         </div>
       </div>
-      <fieldset className="theme-setting">
-        <legend>Theme</legend>
-        <div className="theme-segments">
-          {themes.map(({ value, label }) => <label key={value}>
-            <input className="sr-only" type="radio" name={id + '-theme'} value={value}
-              checked={theme === value} data-initial-focus={theme === value ? '' : undefined}
-              onChange={() => selectTheme(value)} />
-            <span>{label}</span>
-          </label>)}
-        </div>
-      </fieldset>
       <button className="button ghost sign-out" type="button" onClick={() => {
         setOpen(false)
         requestSignOut(trigger.current)
